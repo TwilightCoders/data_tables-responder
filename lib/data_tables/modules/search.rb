@@ -33,8 +33,13 @@ module DataTables
             @collection = @collection.joins(k)
             klass.arel_table[query.first.first].matches(query.first.last)
           else
-            if (model.columns.find { |c| c.name == k.to_s && c.type == :string })
-              model.arel_table[k].matches(query)
+            if (column = model.columns.find { |c| c.name == k.to_s })
+              case column.type
+              when :string
+                model.arel_table[k].matches("%#{query}%")
+              else
+                nil
+              end
             end
           end
         end.compact
