@@ -27,7 +27,7 @@ module DataTables
 
       def as_json
         {
-          recordsTotal: @collection&.total_entries || 0,
+          recordsTotal: @collection&.model&.count || 0,
           recordsFiltered: @collection&.total_entries || 0
         }
       end
