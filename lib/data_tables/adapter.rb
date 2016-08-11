@@ -38,7 +38,6 @@ module DataTables
       end
 
       @results = search(@results)
-      # search_by = search(@results)
 
       # Rails.logger.warn "SEARCH BY: #{search_by}"
       @results = order_by.inject(@results) { |r, o| r.order(o) }

@@ -21,6 +21,7 @@ module DataTables
         return @collection unless (default_search = request_parameters.dig(:search, :value)).present?
 
         model = @collection.try(:model) || @collection
+        arel_table = model.arel_table
         columns = searchable_columns(default_search)
 
         searches = DataTables.flat_keys_to_nested columns
@@ -28,10 +29,17 @@ module DataTables
         or_clause = nil
         search_by = searches.collect do |k, query|
           if query.is_a? Hash
-            klass = model.reflect_on_association(k).klass
+            assoc = model.reflect_on_association(k)
+            assoc_klass = assoc.klass
+            assoc_arel_table = assoc_klass.arel_table
 
-            @collection = @collection.joins(k)
-            klass.arel_table[query.first.first].matches(query.first.last)
+            if model.respond_to? :left_outer_join
+              @collection = @collection.left_outer_join(k)
+            else
+              @collection = @collection.includes(k).references(k)
+            end
+
+            assoc_arel_table[query.first.first].matches(query.first.last)
           else
             if (column = model.columns.find { |c| c.name == k.to_s })
               case column.type
