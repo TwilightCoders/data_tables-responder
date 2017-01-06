@@ -18,7 +18,7 @@ module DataTables
       end
 
       def search
-        return @collection unless (default_search = request_parameters.dig(:search, :value)).present?
+        default_search = request_parameters.dig(:search, :value)
 
         model = @collection.try(:model) || @collection
         arel_table = model.arel_table
@@ -45,6 +45,8 @@ module DataTables
               case column.type
               when :string
                 model.arel_table[k].matches("%#{query}%")
+              when :integer
+                model.arel_table[k].eq(query)
               else
                 nil
               end
@@ -58,16 +60,17 @@ module DataTables
       protected
 
       def searchable_columns(default_search)
-        @searchable_columns ||= Hash[
-          request_parameters[:columns].collect do |c|
-            if c[:searchable] && c[:data]
-              value = default_search unless (value = c.dig(:search, :value)).present?
-              [c[:data], value]
-            else
-              nil
+        @searchable_columns = {}
+        request_parameters[:columns]&.inject(@searchable_columns) do |a, b|
+          if (b[:searchable] && b[:data].present?)
+            if ((value = b.dig(:search, :value).present? ? b.dig(:search, :value) : default_search).present?)
+              a[b[:data]] = value
             end
-          end.compact
-        ]
+          end
+          a
+        end
+
+        @searchable_columns
       end
 
       private
