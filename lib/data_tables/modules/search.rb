@@ -26,35 +26,39 @@ module DataTables
 
         searches = DataTables.flat_keys_to_nested columns
 
-        or_clause = nil
-        search_by = searches.collect do |k, query|
-          if query.is_a? Hash
-            assoc = model.reflect_on_association(k)
-            assoc_klass = assoc.klass
-            assoc_arel_table = assoc_klass.arel_table
-
-            if model.respond_to? :left_outer_join
-              @collection = @collection.left_outer_join(k)
-            else
-              @collection = @collection.includes(k).references(k)
-            end
-
-            assoc_arel_table[query.first.first].matches(query.first.last)
-          else
-            if (column = model.columns.find { |c| c.name == k.to_s })
-              case column.type
-              when :string
-                model.arel_table[k].matches("%#{query}%")
-              when :integer
-                model.arel_table[k].eq(query)
-              else
-                nil
-              end
-            end
-          end
-        end.compact
+        search_by = build_search(model, searches)
 
         @collection.where(search_by.reduce(:or))
+      end
+
+      def build_search(model, searches)
+        queries = []
+        searches.inject(queries) do |query, junk|
+          column, search = junk
+          case search
+          when Hash
+            assoc = model.reflect_on_association(column)
+            assoc_klass = assoc.klass
+
+            outer_join = Arel::Nodes::OuterJoin.new(assoc_klass.arel_table,
+              Arel::Nodes::On.new(
+                model.arel_table[assoc.active_record_primary_key].eq(assoc_klass.arel_table[assoc.foreign_key])
+            ))
+            @collection.joins(outer_join)
+            query << build_search(assoc_klass, search).reduce(:or)
+          else
+            col_s = column.to_s
+            case (k = model.columns.find(nil) { |c| c.name == col_s })&.type
+            when :string
+              query << model.arel_table[k.name].matches("%#{search}%")
+            when :integer
+              query << model.arel_table[k.name].eq(search)
+            else
+              query
+            end
+          end
+        end
+        queries
       end
 
       protected
