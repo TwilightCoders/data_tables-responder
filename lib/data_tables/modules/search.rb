@@ -42,10 +42,10 @@ module DataTables
 
             outer_join = Arel::Nodes::OuterJoin.new(assoc_klass.arel_table,
               Arel::Nodes::On.new(
-                model.arel_table[assoc.active_record_primary_key].eq(assoc_klass.arel_table[assoc.foreign_key])
+                model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
             ))
-            @collection.joins(outer_join)
             query << build_search(assoc_klass, search).reduce(:or)
+            @collection = @collection.joins(outer_join)
           else
             col_s = column.to_s
             case (k = model.columns.find(nil) { |c| c.name == col_s })&.type
