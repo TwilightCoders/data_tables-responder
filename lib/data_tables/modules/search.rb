@@ -28,37 +28,45 @@ module DataTables
 
         search_by = build_search(model, searches)
 
-        @collection.where(search_by.reduce(:or))
+        @collection.where(search_by.reduce(:and))
       end
 
       def build_search(model, searches)
-        queries = []
-        searches.inject(queries) do |query, junk|
-          column, search = junk
-          case search
+        # join_type = Arel::Nodes::OuterJoin
+        join_type = Arel::Nodes::InnerJoin
+
+        searches.inject([]) do |queries, junk|
+          column, query = junk
+          case query
           when Hash
             assoc = model.reflect_on_association(column)
             assoc_klass = assoc.klass
 
-            outer_join = Arel::Nodes::OuterJoin.new(assoc_klass.arel_table,
+            outer_join = join_type.new(assoc_klass.arel_table,
               Arel::Nodes::On.new(
                 model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
             ))
-            query << build_search(assoc_klass, search).reduce(:or)
             @collection = @collection.joins(outer_join)
+            queries << build_search(assoc_klass, query).reduce(:and)
           else
             col_s = column.to_s
             case (k = model.columns.find(nil) { |c| c.name == col_s })&.type
             when :string
-              query << model.arel_table[k.name].matches("%#{search}%")
+              # I'm pretty sure this is safe from SQL Injection
+              queries << model.arel_table[k.name].matches("%#{query}%")
             when :integer
-              query << model.arel_table[k.name].eq(search)
-            else
-              query
+              if value = query&.to_i
+                queries << model.arel_table[k.name].eq(value)
+              end
+            when :datetime
+              datetime = Time.parse(query)
+              range = (datetime-1.second)..(datetime+1.second)
+              queries << model.arel_table[k.name].between(range)
             end
           end
+
+          queries
         end
-        queries
       end
 
       protected
