@@ -1,4 +1,5 @@
 require 'active_model_serializers'
+require 'count_estimate'
 require 'data_tables/modules/pagination'
 require 'data_tables/modules/search'
 

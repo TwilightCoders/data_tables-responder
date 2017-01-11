@@ -22,17 +22,25 @@ module DataTables
         start = (request_parameters[:start] || '0').to_i
         length = (request_parameters[:length] || '10').to_i
         page = (start / length) + 1
-        @collection = @collection.paginate(page: page, per_page: length)
+        @collection = @collection.paginate(page: page, per_page: length, total_entries: records_total)
       end
 
       def as_json
         {
-          recordsTotal: @collection&.model&.count || 0,
-          recordsFiltered: @collection&.total_entries || 0
+          recordsTotal: @collection&.total_entries&.to_i,
+          recordsFiltered: records_filtered&.to_i
         }
       end
 
       protected
+
+      def records_total
+        @collection&.model&.all.count_estimate
+      end
+
+      def records_filtered
+        @collection&.unscope(:limit, :offset)&.count_estimate
+      end
 
       attr_reader :adapter_options
 
