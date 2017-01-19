@@ -1,11 +1,17 @@
-require 'rails'
+require 'rails/railtie'
+require 'action_controller'
+require 'action_controller/railtie'
 
 module DataTables
   module Responder
     class Railtie < ::Rails::Railtie
-      initializer "data_tables.configure", after: 'active_model_serializers.prepare_serialization_context' do
-        Mime::Type.register_alias 'application/json', :dt, %w( text/plain text/x-json application/jsonrequest application/dt application/datatable )
+
+      initializer 'data_tables-responder.action_controller', after: 'active_model_serializers.action_controller' do
+        ActiveSupport.on_load(:action_controller) do
+          require 'data_tables/active_model_serializers/register_dt_renderer'
+        end
       end
+
     end
   end
 end

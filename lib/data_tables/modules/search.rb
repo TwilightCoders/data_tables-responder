@@ -1,30 +1,22 @@
 module DataTables
   module Modules
     class Search
-      MissingSerializationContextError = Class.new(KeyError)
 
       attr_reader :collection, :context
 
-      def initialize(collection, adapter_options)
+      def initialize(collection, request_parameters)
         @collection = collection
-        @adapter_options = adapter_options
-        @context = adapter_options.fetch(:serialization_context) do
-          fail MissingSerializationContextError, <<-EOF.freeze
-  Datatables::Search requires a ActiveModelSerializers::SerializationContext.
-  Please pass a ':serialization_context' option or
-  override CollectionSerializer#searchable? to return 'false'.
-           EOF
-        end
+        @request_parameters = request_parameters
       end
 
       def search
-        default_search = request_parameters.dig(:search, :value)
+        default_search = @request_parameters.dig(:search, :value)
 
         model = @collection.try(:model) || @collection
         arel_table = model.arel_table
         columns = searchable_columns(default_search)
 
-        searches = DataTables.flat_keys_to_nested columns
+        searches = DataTables::Responder.flat_keys_to_nested columns
 
         search_by = build_search(model, searches)
 
@@ -42,11 +34,11 @@ module DataTables
             assoc = model.reflect_on_association(column)
             assoc_klass = assoc.klass
 
-            outer_join = join_type.new(assoc_klass.arel_table,
+            join = join_type.new(assoc_klass.arel_table,
               Arel::Nodes::On.new(
                 model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
             ))
-            @collection = @collection.joins(outer_join)
+            @collection = @collection.joins(join)
             queries << build_search(assoc_klass, query).reduce(:and)
           else
             col_s = column.to_s
@@ -73,7 +65,7 @@ module DataTables
 
       def searchable_columns(default_search)
         @searchable_columns = {}
-        request_parameters[:columns]&.inject(@searchable_columns) do |a, b|
+        @request_parameters[:columns]&.inject(@searchable_columns) do |a, b|
           if (b[:searchable] && b[:data].present?)
             if ((value = b.dig(:search, :value).present? ? b.dig(:search, :value) : default_search).present?)
               a[b[:data]] = value
@@ -86,10 +78,6 @@ module DataTables
       end
 
       private
-
-      def request_parameters
-        @request_parameters ||= context.request_parameters
-      end
 
     end
   end
