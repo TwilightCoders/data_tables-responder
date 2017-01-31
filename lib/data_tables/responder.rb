@@ -9,17 +9,17 @@ require 'data_tables/responder/railtie' if defined? ::Rails::Railtie
 module DataTables
   module Responder
 
-    def self.respond(resource, params)
-      model = resource.try(:model) || resource
+    def self.respond(original_scope, params)
+      model = original_scope.try(:model) || original_scope
 
-      results = resource
+      filtered_results = original_scope&.dup || model.none
       hashed_orders = transmute_datatable_order(params[:order], params[:columns])
       orders = flat_keys_to_nested hashed_orders
 
       order_by = orders.collect do |k, order|
         if order.is_a? Hash
           if (klass = model.reflect_on_association(k).try(:klass))
-            results = results.joins(k)
+            filtered_results = filtered_results.joins(k)
             klass.arel_table[order.first.first].send(order.first.last)
           end
         else
@@ -27,11 +27,11 @@ module DataTables
         end
       end
 
-      results = search(results, params)
+      filtered_results = search(filtered_results, params)
 
       # Rails.logger.warn "SEARCH BY: #{search_by}"
-      results = order_by.inject(results) { |r, o| r.order(o) }
-      results = paginate(results, params)
+      filtered_results = order_by.inject(filtered_results) { |r, o| r.order(o) }
+      filtered_results = paginate(original_scope, filtered_results, params)
     end
 
     def self.flat_keys_to_nested(hash)
@@ -43,12 +43,12 @@ module DataTables
     end
 
 
-    def self.paginate(collection, params)
-      Modules::Pagination.new(collection, params).paginate
+    def self.paginate(original_scope, filtered_results, params)
+      Modules::Pagination.new(original_scope, filtered_results, params).paginate
     end
 
-    def self.search(collection, params)
-      Modules::Search.new(collection, params).search
+    def self.search(filtered_results, params)
+      Modules::Search.new(filtered_results, params).search
     end
 
     def self.transmute_datatable_order(orders, columns)

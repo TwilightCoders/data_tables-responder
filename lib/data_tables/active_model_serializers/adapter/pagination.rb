@@ -12,7 +12,7 @@ module DataTables
         def as_h
           {
             recordsTotal: collection&.total_entries&.to_i,
-            recordsFiltered: @collection&.unscope(:limit, :offset)&.count_estimate&.to_i
+            recordsFiltered: collection&.unscope(:limit, :offset)&.count_estimate&.to_i
           }
         end
 

@@ -5,10 +5,11 @@ module DataTables
     class Pagination
       FIRST_PAGE = 1
 
-      attr_reader :collection, :context
+      attr_reader :original_scope, :filtered_scope, :context
 
-      def initialize(collection, request_parameters)
-        @collection = collection
+      def initialize(original_scope, filtered_scope, request_parameters)
+        @original_scope = original_scope
+        @filtered_scope = filtered_scope
         @request_parameters = request_parameters
       end
 
@@ -16,12 +17,12 @@ module DataTables
         start = (@request_parameters[:start] || '0').to_i
         length = (@request_parameters[:length] || '10').to_i
         page = (start / length) + 1
-        @collection = @collection.paginate(page: page, per_page: length, total_entries: records_total)
+        @filtered_scope = @filtered_scope.paginate(page: page, per_page: length, total_entries: records_total)
       end
 
       def as_json
         {
-          recordsTotal: @collection&.total_entries&.to_i,
+          recordsTotal: @filtered_scope&.total_entries&.to_i,
           recordsFiltered: records_filtered&.to_i
         }
       end
@@ -29,11 +30,17 @@ module DataTables
       protected
 
       def records_total
-        @collection&.model&.all.count_estimate
+        # TODO: Check threshold
+        count_estimate = @original_scope&.model&.all&.count_estimate.to_i
+        if count_estimate < 1_000_000
+          count_estimate = @original_scope&.count
+        end
+
+        count_estimate
       end
 
       def records_filtered
-        @collection&.unscope(:limit, :offset)&.count_estimate
+        @filtered_scope&.unscope(:limit, :offset)&.count_estimate
       end
 
       attr_reader :adapter_options
