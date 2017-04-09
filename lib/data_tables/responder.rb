@@ -43,10 +43,15 @@ module DataTables
     end
 
     def self.transmute_datatable_order(orders, columns)
-      Hash[if orders.is_a? Array
-        orders.collect do |order|
-          if (name = columns[order[:column]][:data]).present?
-            [name, order[:dir]]
+      sums = {}
+      (orders || []).inject(sums) do |sum, order|
+        if (name = columns[order[:column]][:data]).present?
+          sum[name] = order[:dir]
+        end
+      end
+      sums
+    end
+
     private
 
     def self.build_order_map(model, in_hash)#, filtered_results)
