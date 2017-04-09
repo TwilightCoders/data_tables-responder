@@ -1,6 +1,7 @@
 require 'rails/railtie'
 require 'action_controller'
 require 'action_controller/railtie'
+require 'quick_count/railtie'
 
 module DataTables
   module Responder
