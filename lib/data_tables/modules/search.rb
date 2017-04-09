@@ -27,19 +27,21 @@ module DataTables
         # join_type = Arel::Nodes::OuterJoin
         join_type = Arel::Nodes::InnerJoin
 
-        searches.inject([]) do |queries, junk|
-          column, query = junk
+        searches.inject([]) do |queries, (column, query)|
           case query
           when Hash
-            assoc = model.reflect_on_association(column)
-            assoc_klass = assoc.klass
+            if (assoc = model.reflect_on_association(column))
+              assoc_klass = assoc.klass
 
-            join = join_type.new(assoc_klass.arel_table,
-              Arel::Nodes::On.new(
-                model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
-            ))
-            @collection = @collection.joins(join)
-            queries << build_search(assoc_klass, query).reduce(:and)
+              join = join_type.new(assoc_klass.arel_table,
+                Arel::Nodes::On.new(
+                  model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
+              ))
+              @collection = @collection.joins(join)
+              queries << build_search(assoc_klass, query).reduce(:and)
+            else
+              warn("trying to reflect on #{column} but #{model.class.name} has no such association.")
+            end
           else
             col_s = column.to_s
             case (k = model.columns.find(nil) { |c| c.name == col_s })&.type
