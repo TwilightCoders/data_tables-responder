@@ -1,3 +1,4 @@
+require 'data_tables'
 require "data_tables/responder/version"
 
 require 'data_tables/modules/pagination'
