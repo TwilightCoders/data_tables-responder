@@ -17,16 +17,7 @@ module DataTables
       hashed_orders = transmute_datatable_order(params[:order], params[:columns])
       orders = flat_keys_to_nested hashed_orders
 
-      order_by = orders.collect do |k, order|
-        if order.is_a? Hash
-          if (klass = model.reflect_on_association(k).try(:klass))
-            filtered_results = filtered_results.joins(k)
-            klass.arel_table[order.first.first].send(order.first.last)
-          end
-        else
-          { k => order }
-        end
-      end
+      order_by = build_order_map(model, orders)#, filtered_results)
 
       filtered_results = search(filtered_results, params)
 
@@ -43,7 +34,6 @@ module DataTables
       end
     end
 
-
     def self.paginate(original_scope, filtered_results, params)
       Modules::Pagination.new(original_scope, filtered_results, params).paginate
     end
@@ -57,13 +47,26 @@ module DataTables
         orders.collect do |order|
           if (name = columns[order[:column]][:data]).present?
             [name, order[:dir]]
+    private
+
+    def self.build_order_map(model, in_hash)#, filtered_results)
+      results = []
+      in_hash.inject(results) do |sum, (k, h)|
+        case h
+        when Hash
+          if (klass = model.reflect_on_association(k).try(:klass))
+            # filtered_results = filtered_results.joins(k)
+            sum += build_order_map(klass, h)#, filtered_results)
           else
-            nil
+            warn("trying to reflect on #{k} but #{model.class.name} has no such association.")
           end
+        else
+          sum << model.arel_table[k].send(h) if model.column_names.include?(k.to_s)
         end
-      else
-        []
-      end.compact]
+        return sum
+      end
+      results
     end
+
   end
 end
