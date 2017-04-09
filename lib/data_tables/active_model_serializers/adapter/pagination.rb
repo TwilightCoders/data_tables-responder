@@ -29,15 +29,16 @@ module DataTables
         private
 
         def get_records_filtered
-          if records_total < 1_000_000
-            @collection.unscope(:limit, :offset).count(@collection.model.primary_key).to_i
+          to_filter = @collection.unscope(:limit, :offset)
+          if !to_filter.respond_to?(:count_estimate) || records_total < 1_000_000
+            to_filter.count(@collection.model.primary_key).to_i
           else
-            @collection.unscope(:limit, :offset).count_estimate.to_i
+            to_filter.count_estimate.to_i
           end
         end
 
         def get_records_total
-          count = @collection.model.all.count_estimate.to_i
+          count = @collection.model.quick_count
           if count < 1_000_000
             count = @collection.model.all.count(@collection.model.primary_key).to_i
           end

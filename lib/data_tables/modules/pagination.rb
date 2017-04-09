@@ -1,4 +1,3 @@
-require 'count_estimate'
 
 module DataTables
   module Modules
