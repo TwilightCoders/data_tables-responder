@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'active_model_serializers', '~> 0.10.4'
   spec.add_dependency 'count_estimate'
+  spec.add_dependency 'railties', rails_versions
 
   spec.add_development_dependency 'activerecord', rails_versions
   spec.add_development_dependency 'bundler', '~> 1.12'
