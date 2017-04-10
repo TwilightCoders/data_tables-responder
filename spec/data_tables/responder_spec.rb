@@ -198,8 +198,8 @@ describe DataTables::Responder do
 
       expect(response.count).to be(1)
       expect(response_sql).to include('"comments".* FROM "comments"')
-      expect(response_sql).to include('INNER JOIN "posts" ON "comments"."post_id" = "posts"."id"')
-      expect(response_sql).to include('INNER JOIN "users" ON "posts"."user_id" = "users"."id"')
+      expect(response_sql).to include('INNER JOIN "posts" ON "posts"."id" = "comments"."post_id"')
+      expect(response_sql).to include('JOIN "users" ON "users"."id" = "posts"."user_id"')
       expect(response_sql).to include('WHERE ("users"."email" ILIKE \'%foo@bar.baz%\')')
       expect(response_sql).to include('ORDER BY "users"."email" ASC')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')

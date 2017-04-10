@@ -18,52 +18,57 @@ module DataTables
 
         searches = DataTables::Responder.flat_keys_to_nested columns
 
-        search_by = build_search(model, searches)
+        search_by, @collection = build_search(model, searches, @collection)
 
         @collection.where(search_by.reduce(:and))
       end
 
-      def build_search(model, searches)
-        # join_type = Arel::Nodes::OuterJoin
-        join_type = Arel::Nodes::InnerJoin
-
-        searches.inject([]) do |queries, (column, query)|
+      def build_search(model, in_hash, filtered_scope, join_type = Arel::Nodes::InnerJoin)
+        return in_hash.inject([]) { |queries, (column, query)|
           case query
           when Hash
             if (assoc = model.reflect_on_association(column))
-              assoc_klass = assoc.klass
+              klass = assoc.klass
 
-              join = join_type.new(assoc_klass.arel_table,
-                Arel::Nodes::On.new(
-                  model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
-              ))
-              @collection = @collection.joins(join)
-              queries << build_search(assoc_klass, query).reduce(:and)
+              # join = join_type.new(assoc_klass.arel_table,
+              #   Arel::Nodes::On.new(
+              #     model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
+              # ))
+              # @collection = @collection.joins(join)
+
+              new_queries, filtered_scope = build_search(klass, query, filtered_scope.merge(model.joins(column)))
+              queries << new_queries.reduce(:and)
             else
               warn("trying to reflect on #{column} but #{model.class.name} has no such association.")
             end
           else
-            col_s = column.to_s
-            case (k = model.columns.find(nil) { |c| c.name == col_s })&.type
-            when :string
-              # I'm pretty sure this is safe from SQL Injection
-              queries << model.arel_table[k.name].matches("%#{query}%")
-            when :integer
-              if value = query&.to_i
-                queries << model.arel_table[k.name].eq(value)
-              end
-            when :datetime
-              datetime = Time.parse(query)
-              range = (datetime-1.second)..(datetime+1.second)
-              queries << model.arel_table[k.name].between(range)
+            search_by_type(model, column, query) do |result|
+              queries << result
             end
           end
-
           queries
-        end
+        }, filtered_scope
       end
 
       protected
+
+      def search_by_type(model, column, query, &block)
+        result = case model.columns_hash[column.to_s]&.type
+        when :string
+          # I'm pretty sure this is safe from SQL Injection
+          model.arel_table[column].matches("%#{query}%")
+        when :integer
+          model.arel_table[column].eq(value) if value = query&.to_i
+        when :datetime
+          datetime = Time.parse(query)
+          range = (datetime-1.second)..(datetime+1.second)
+          model.arel_table[column].between(range)
+        end
+
+        yield(result) if !result.nil? && block_given?
+
+        result
+      end
 
       def searchable_columns(default_search)
         @searchable_columns = {}
