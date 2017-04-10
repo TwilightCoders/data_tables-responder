@@ -229,13 +229,6 @@ describe DataTables::Responder do
     end
   end
 
-  it 'transmutes datatable order' do
-
-    transmuted = DataTables::Responder.transmute_datatable_order(complex_params[:order], complex_params[:columns])
-
-    expect(transmuted).to eq({"post.user.email"=>"asc"})
-  end
-
   describe 'handles simple' do
     it 'nested requests' do
 
