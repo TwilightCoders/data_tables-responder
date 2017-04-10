@@ -197,31 +197,34 @@ describe DataTables::Responder do
       response_sql = response.to_sql
 
       expect(response.count).to be(1)
-      expect(response.to_sql).to include('INNER JOIN "posts" ON "comments"."post_id" = "posts"."id"')
-      expect(response.to_sql).to include('INNER JOIN "users" ON "posts"."user_id" = "users"."id"')
-      expect(response.to_sql).to include('WHERE ("users"."email" ILIKE \'%foo@bar.baz%\')')
-      expect(response.to_sql).to include('ORDER BY "users"."email" ASC')
-      expect(response.to_sql).to include('LIMIT 10 OFFSET 0')
+      expect(response_sql).to include('"comments".* FROM "comments"')
+      expect(response_sql).to include('INNER JOIN "posts" ON "comments"."post_id" = "posts"."id"')
+      expect(response_sql).to include('INNER JOIN "users" ON "posts"."user_id" = "users"."id"')
+      expect(response_sql).to include('WHERE ("users"."email" ILIKE \'%foo@bar.baz%\')')
+      expect(response_sql).to include('ORDER BY "users"."email" ASC')
+      expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
 
     it 'nested requests with bad data' do
 
-      response = DataTables::Responder.respond(Post.all, complex_bad_params)
+      response = DataTables::Responder.respond(Comment.all, complex_bad_params)
       response_sql = response.to_sql
 
       expect(response.count).to be(1)
-      expect(response_sql).to include('"posts".* FROM "posts"')
+      expect(response_sql).to include('"comments".* FROM "comments"')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
 
     it 'nested requests when sorting without searching' do
 
-      response = DataTables::Responder.respond(Post.all, complex_params_with_order_and_empty_search)
+      response = DataTables::Responder.respond(Comment.all, complex_params_with_order_and_empty_search)
       response_sql = response.to_sql
 
       expect(response.count).to be(1)
-      expect(response_sql).to include('"posts".* FROM "posts"')
-      expect(response_sql).to include('ORDER BY "posts"."title" ASC')
+      expect(response_sql).to include('"comments".* FROM "comments"')
+      expect(response_sql).to include('INNER JOIN "posts" ON "posts"."id" = "comments"."post_id"')
+      expect(response_sql).to include('JOIN "users" ON "users"."id" = "posts"."user_id"')
+      expect(response_sql).to include('ORDER BY "users"."email" ASC')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
   end

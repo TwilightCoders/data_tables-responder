@@ -13,17 +13,17 @@ module DataTables
     def self.respond(original_scope, params)
       model = original_scope.try(:model) || original_scope
 
-      filtered_results = original_scope&.dup || model.none
+      filtered_scope = original_scope&.dup || model.none
       hashed_orders = transmute_datatable_order(params[:order], params[:columns])
       orders = flat_keys_to_nested hashed_orders
 
-      order_by = build_order_map(model, orders)#, filtered_results)
+      order_by, filtered_scope = build_order_map(model, orders, filtered_scope)
 
-      filtered_results = search(filtered_results, params)
+      filtered_scope = search(filtered_scope, params)
 
       # Rails.logger.warn "SEARCH BY: #{search_by}"
-      filtered_results = order_by.inject(filtered_results) { |r, o| r.order(o) }
-      filtered_results = paginate(original_scope, filtered_results, params)
+      filtered_scope = order_by.inject(filtered_scope) { |r, o| r.order(o) }
+      filtered_scope = paginate(original_scope, filtered_scope, params)
     end
 
     def self.flat_keys_to_nested(hash)
@@ -34,12 +34,12 @@ module DataTables
       end
     end
 
-    def self.paginate(original_scope, filtered_results, params)
-      Modules::Pagination.new(original_scope, filtered_results, params).paginate
+    def self.paginate(original_scope, filtered_scope, params)
+      Modules::Pagination.new(original_scope, filtered_scope, params).paginate
     end
 
-    def self.search(filtered_results, params)
-      Modules::Search.new(filtered_results, params).search
+    def self.search(filtered_scope, params)
+      Modules::Search.new(filtered_scope, params).search
     end
 
     def self.transmute_datatable_order(orders, columns)
@@ -54,23 +54,22 @@ module DataTables
 
     private
 
-    def self.build_order_map(model, in_hash)#, filtered_results)
-      results = []
-      in_hash.inject(results) do |sum, (k, h)|
+    def self.build_order_map(model, in_hash, filtered_scope)
+      # Tuple!
+      return in_hash.inject([]) { |sum, (k, h)|
         case h
         when Hash
           if (klass = model.reflect_on_association(k).try(:klass))
-            # filtered_results = filtered_results.joins(k)
-            sum += build_order_map(klass, h)#, filtered_results)
+            new_sum, filtered_scope = build_order_map(klass, h, filtered_scope.merge(model.joins(k)))
+            sum += new_sum
           else
             warn("trying to reflect on #{k} but #{model.class.name} has no such association.")
           end
         else
           sum << model.arel_table[k].send(h) if model.column_names.include?(k.to_s)
         end
-        return sum
-      end
-      results
+        sum
+      }, filtered_scope
     end
 
   end
