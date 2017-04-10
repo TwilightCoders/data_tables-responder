@@ -13,7 +13,6 @@ module DataTables
         default_search = @request_parameters.dig(:search, :value)
 
         model = @collection.try(:model) || @collection
-        arel_table = model.arel_table
         columns = searchable_columns(default_search)
 
         searches = DataTables::Responder.flat_keys_to_nested columns
@@ -23,20 +22,13 @@ module DataTables
         @collection.where(search_by.reduce(:and))
       end
 
-      def build_search(model, in_hash, filtered_scope, join_type = Arel::Nodes::InnerJoin)
+      def build_search(model, in_hash, filtered_scope)
+        # Tuple!
         return in_hash.inject([]) { |queries, (column, query)|
           case query
           when Hash
             if (assoc = model.reflect_on_association(column))
-              klass = assoc.klass
-
-              # join = join_type.new(assoc_klass.arel_table,
-              #   Arel::Nodes::On.new(
-              #     model.arel_table[assoc.foreign_key].eq(assoc_klass.arel_table[assoc.active_record_primary_key])
-              # ))
-              # @collection = @collection.joins(join)
-
-              new_queries, filtered_scope = build_search(klass, query, filtered_scope.merge(model.joins(column)))
+              new_queries, filtered_scope = build_search(assoc.klass, query, filtered_scope.merge(model.joins(column)))
               queries << new_queries.reduce(:and)
             else
               warn("trying to reflect on #{column} but #{model.class.name} has no such association.")
@@ -83,8 +75,6 @@ module DataTables
 
         @searchable_columns
       end
-
-      private
 
     end
   end
