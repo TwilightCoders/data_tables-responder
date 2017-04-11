@@ -8,6 +8,8 @@ require 'data_tables/modules/order'
 require 'data_tables/active_model_serializers/adapter'
 require 'data_tables/responder/railtie' if defined? ::Rails::Railtie
 
+require 'quick_count'
+
 module DataTables
   module Responder
 
