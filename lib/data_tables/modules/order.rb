@@ -4,8 +4,8 @@ module DataTables
 
       attr_reader :scope, :context
 
-      def initialize(collection, request_parameters)
-        @scope = collection.dup
+      def initialize(scope, request_parameters)
+        @scope = scope.dup
         @request_parameters = request_parameters
       end
 
@@ -17,18 +17,24 @@ module DataTables
 
         orders = DataTables::Responder.flat_keys_to_nested columns
 
-        order_by, @scope = build_order(model, orders, @scope)
+        order_by, join_hash = build_order(model, orders)
+
+        @scope = @scope.joins(join_hash)
 
         order_by.inject(@scope) { |r, o| r.order(o) }
       end
 
-      def build_order(model, in_hash, filtered_scope)
+      def build_order(model, in_hash, join_hash = nil)
         # Tuple!
         return in_hash.inject([]) { |sum, (k, h)|
           case h
           when Hash
             if (klass = model.reflect_on_association(k).try(:klass))
-              new_sum, filtered_scope = build_order(klass, h, filtered_scope.merge(model.joins(k)))
+
+              new_sum, join_class = build_order(klass, h)
+
+              join_hash = join_class.nil? ? [k] : {k => join_class}
+
               sum += new_sum
             else
               warn("trying to reflect on #{k} but #{model.class.name} has no such association.")
@@ -37,7 +43,7 @@ module DataTables
             sum << model.arel_table[k].send(h) if model.column_names.include?(k.to_s)
           end
           sum
-        }, filtered_scope
+        }, join_hash
       end
 
       protected

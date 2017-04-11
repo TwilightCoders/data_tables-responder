@@ -2,33 +2,38 @@ module DataTables
   module Modules
     class Search
 
-      attr_reader :collection, :context
+      attr_reader :scope, :context
 
-      def initialize(collection, request_parameters)
-        @collection = collection
+      def initialize(scope, request_parameters)
+        @scope = scope
         @request_parameters = request_parameters
       end
 
       def search
         default_search = @request_parameters.dig(:search, :value)
 
-        model = @collection.try(:model) || @collection
+        model = @scope.try(:model) || @scope
         columns = searchable_columns(default_search)
 
         searches = DataTables::Responder.flat_keys_to_nested columns
 
-        search_by, @collection = build_search(model, searches, @collection)
+        search_by, join_hash = build_search(model, searches)
 
-        @collection.where(search_by.reduce(:and))
+        @scope = @scope.joins(join_hash)
+
+        @scope.where(search_by.reduce(:and))
       end
 
-      def build_search(model, in_hash, filtered_scope)
+      def build_search(model, in_hash, join_hash = nil)
         # Tuple!
         return in_hash.inject([]) { |queries, (column, query)|
           case query
           when Hash
             if (assoc = model.reflect_on_association(column))
-              new_queries, filtered_scope = build_search(assoc.klass, query, filtered_scope.merge(model.joins(column)))
+              new_queries, join_class = build_search(assoc.klass, query)
+
+              join_hash = join_class.nil? ? [column] : {column => join_class}
+
               queries << new_queries.reduce(:and)
             else
               warn("trying to reflect on #{column} but #{model.class.name} has no such association.")
@@ -39,7 +44,7 @@ module DataTables
             end
           end
           queries
-        }, filtered_scope
+        }, join_hash
       end
 
       protected
