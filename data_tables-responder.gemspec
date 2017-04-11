@@ -28,9 +28,9 @@ Gem::Specification.new do |spec|
 
   rails_versions = ['>= 4.1', '< 6']
 
-  spec.add_dependency 'active_model_serializers', '~> 0.10.4'
-  spec.add_dependency 'railties', rails_versions
-  spec.add_dependency 'quick_count', ['>= 0.0.3', '< 0.1.0']
+  spec.add_runtime_dependency 'active_model_serializers', '~> 0.10.4'
+  spec.add_runtime_dependency 'railties', rails_versions
+  spec.add_runtime_dependency 'quick_count', ['>= 0.0.3', '< 0.1.0']
 
   spec.add_development_dependency 'activerecord', rails_versions
   spec.add_development_dependency 'pry-byebug'
