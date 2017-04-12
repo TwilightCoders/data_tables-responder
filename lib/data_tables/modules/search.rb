@@ -4,20 +4,18 @@ module DataTables
 
       attr_reader :scope, :context
 
-      def initialize(scope, request_parameters)
-        @scope = scope
-        @request_parameters = request_parameters
+      def initialize(model, scope, params)
+        @scope = scope.dup
+        @model = model
+        @params = params
       end
 
       def search
-        default_search = @request_parameters.dig(:search, :value)
-
-        model = @scope.try(:model) || @scope
-        columns = searchable_columns(default_search)
+        columns = searchable_columns(@params.dig(:search, :value), @params[:columns])
 
         searches = DataTables::Responder.flat_keys_to_nested columns
 
-        search_by, join_hash = build_search(model, searches)
+        search_by, join_hash = build_search(@model, searches)
 
         @scope = @scope.joins(join_hash)
 
@@ -67,18 +65,15 @@ module DataTables
         result
       end
 
-      def searchable_columns(default_search)
-        @searchable_columns = {}
-        @request_parameters[:columns]&.inject(@searchable_columns) do |a, b|
-          if (b[:searchable] && b[:data].present?)
-            if ((value = b.dig(:search, :value).present? ? b.dig(:search, :value) : default_search).present?)
-              a[b[:data]] = value
+      def searchable_columns(default_search, columns)
+        columns&.inject({}) do |collection, column|
+          if (column[:searchable] && column[:data].present?)
+            if ((value = column.dig(:search, :value).present? ? column.dig(:search, :value) : default_search).present?)
+              collection[column[:data]] = value
             end
           end
-          a
+          collection
         end
-
-        @searchable_columns
       end
 
     end

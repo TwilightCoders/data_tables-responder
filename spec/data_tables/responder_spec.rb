@@ -190,6 +190,14 @@ describe DataTables::Responder do
     })
   end
 
+  it 'responds when given activerecord::base model' do
+    response = DataTables::Responder.respond(Comment, complex_params)
+      response_sql = response.to_sql
+
+      expect(response.count).to be(1)
+      expect(response_sql).to include('"comments".* FROM "comments"')
+  end
+
   describe 'handles complex' do
     it 'nested requests' do
 

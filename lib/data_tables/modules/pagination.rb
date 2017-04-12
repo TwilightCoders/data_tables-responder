@@ -3,21 +3,22 @@ module DataTables
   module Modules
     class Pagination
 
-      FIRST_PAGE = 1
+      FIRST_PAGE = '0'
+      DEFAULT_LENGTH = '10'
 
-      attr_reader :original_scope, :filtered_scope, :context
+      attr_reader :scope, :context
 
-      def initialize(original_scope, filtered_scope, request_parameters)
-        @original_scope = original_scope
-        @filtered_scope = filtered_scope
-        @request_parameters = request_parameters
+      def initialize(model, scope, params)
+        @scope = scope.dup
+        @model = model
+        @params = params
       end
 
       def paginate
-        start = (@request_parameters[:start] || '0').to_i
-        length = (@request_parameters[:length] || '10').to_i
+        start = (@params[:start] || FIRST_PAGE).to_i
+        length = (@params[:length] || DEFAULT_LENGTH).to_i
         page = (start / length)
-        @filtered_scope = @filtered_scope.offset(page * length).limit(length)
+        @scope.offset(page * length).limit(length)
       end
 
     end

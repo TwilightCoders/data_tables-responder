@@ -4,20 +4,18 @@ module DataTables
 
       attr_reader :scope, :context
 
-      def initialize(scope, request_parameters)
+      def initialize(model, scope, params)
         @scope = scope.dup
-        @request_parameters = request_parameters
+        @model = model
+        @params = params
       end
 
       def order
-        # default_order = @request_parameters.dig(:order, :value)
-
-        model = @scope.try(:model) || @scope
-        columns = orderable_columns(@request_parameters[:order], @request_parameters[:columns])
+        columns = orderable_columns(@params[:order], @params[:columns])
 
         orders = DataTables::Responder.flat_keys_to_nested columns
 
-        order_by, join_hash = build_order(model, orders)
+        order_by, join_hash = build_order(@model, orders)
 
         @scope = @scope.joins(join_hash)
 
@@ -49,13 +47,13 @@ module DataTables
       protected
 
       def orderable_columns(orders, columns)
-        sums = {}
-        (orders || []).inject(sums) do |sum, order|
-          if (name = columns[order[:column]][:data]).present?
-            sum[name] = order[:dir]
+        orders&.inject({}) do |collection, order|
+          column = columns[order[:column]]
+          if (column[:orderable] && column[:data].present?)
+            collection[column[:data]] = order[:dir]
           end
+          collection
         end
-        sums
       end
 
     end

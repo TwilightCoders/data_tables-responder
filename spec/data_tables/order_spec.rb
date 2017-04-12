@@ -51,7 +51,7 @@ describe DataTables::Modules::Order do
 
   it 'transmutes datatable order' do
 
-    order = DataTables::Modules::Order.new(Post, complex_params)
+    order = DataTables::Modules::Order.new(Post, Post.all, complex_params)
 
     transmuted = order.orderable_columns(complex_params[:order], complex_params[:columns])
 

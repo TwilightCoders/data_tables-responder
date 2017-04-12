@@ -18,12 +18,11 @@ module DataTables
 
       filtered_scope = original_scope&.dup || model.none
 
-      filtered_scope = order(filtered_scope, params)
+      filtered_scope = order(model, filtered_scope, params)
 
-      filtered_scope = search(filtered_scope, params)
+      filtered_scope = search(model, filtered_scope, params)
 
-      # Rails.logger.warn "SEARCH BY: #{search_by}"
-      filtered_scope = paginate(original_scope, filtered_scope, params)
+      filtered_scope = paginate(model, filtered_scope, params)
     end
 
     def self.flat_keys_to_nested(hash)
@@ -34,16 +33,16 @@ module DataTables
       end
     end
 
-    def self.paginate(original_scope, filtered_scope, params)
-      Modules::Pagination.new(original_scope, filtered_scope, params).paginate
+    def self.paginate(model, filtered_scope, params)
+      Modules::Pagination.new(model, filtered_scope, params).paginate
     end
 
-    def self.search(filtered_scope, params)
-      Modules::Search.new(filtered_scope, params).search
+    def self.search(model, filtered_scope, params)
+      Modules::Search.new(model, filtered_scope, params).search
     end
 
-    def self.order(filtered_scope, params)
-      Modules::Order.new(filtered_scope, params).order
+    def self.order(model, filtered_scope, params)
+      Modules::Order.new(model, filtered_scope, params).order
     end
 
   end
