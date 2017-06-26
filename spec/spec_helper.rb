@@ -1,5 +1,7 @@
 ENV["RAILS_ENV"] = "test"
 
+require 'database_cleaner'
+
 require 'data_tables/responder'
 
 Dir[DataTables.root.join('spec/support/**/*.rb')].each { |f| require f }
@@ -20,4 +22,14 @@ load File.dirname(__FILE__) + '/schema.rb'
 RSpec.configure do |config|
   config.order = "random"
 
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :truncation
+    DatabaseCleaner.clean_with(:truncation, except: [])
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
 end

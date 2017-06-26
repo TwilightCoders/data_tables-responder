@@ -4,7 +4,7 @@ require 'pry'
 
 describe DataTables::Responder do
 
-  before(:all) do
+  before(:each) do
     user = User.create(email: 'foo@bar.baz')
     post = Post.create(user: user, title: 'foo')
     comment = Comment.create(post: post, user: user)
@@ -194,7 +194,7 @@ describe DataTables::Responder do
     response = DataTables::Responder.respond(Comment, complex_params)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('"comments".* FROM "comments"')
   end
 
@@ -204,7 +204,7 @@ describe DataTables::Responder do
       response = DataTables::Responder.respond(Comment.all, complex_params)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('"comments".* FROM "comments"')
       expect(response_sql).to include('INNER JOIN "posts" ON "posts"."id" = "comments"."post_id"')
       expect(response_sql).to include('JOIN "users" ON "users"."id" = "posts"."user_id"')
@@ -218,7 +218,7 @@ describe DataTables::Responder do
       response = DataTables::Responder.respond(Comment.all, complex_bad_params)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('"comments".* FROM "comments"')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
@@ -228,7 +228,7 @@ describe DataTables::Responder do
       response = DataTables::Responder.respond(Comment.all, complex_params_with_order_and_empty_search)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('"comments".* FROM "comments"')
       expect(response_sql).to include('INNER JOIN "posts" ON "posts"."id" = "comments"."post_id"')
       expect(response_sql).to include('JOIN "users" ON "users"."id" = "posts"."user_id"')
@@ -243,7 +243,7 @@ describe DataTables::Responder do
       response = DataTables::Responder.respond(Post.all, simple_params)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('WHERE ("posts"."title" ILIKE \'%foo%\')')
       expect(response_sql).to include('ORDER BY "posts"."title" ASC')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
@@ -254,7 +254,7 @@ describe DataTables::Responder do
       response = DataTables::Responder.respond(Post.all, simple_bad_params)
       response_sql = response.to_sql
 
-      expect(response.count).to be(1)
+      expect(response.count).to eq(1)
       expect(response_sql).to include('"posts".* FROM "posts"')
       expect(response_sql).to_not include('"posts"."missing_column"')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
