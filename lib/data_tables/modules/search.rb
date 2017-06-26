@@ -53,7 +53,7 @@ module DataTables
           # I'm pretty sure this is safe from SQL Injection
           model.arel_table[column].matches("%#{query}%")
         when :integer
-          model.arel_table[column].eq(value) if value = query&.to_i
+          value = query&.to_i and model.arel_table[column].eq(value)
         when :datetime
           datetime = Time.parse(query)
           range = (datetime-1.second)..(datetime+1.second)
