@@ -9,6 +9,7 @@ ActiveRecord::Schema.define do
   create_table :posts, :force => true do |t|
     t.integer :user_id
     t.string :title
+    t.integer :views # for testing integers
     t.timestamps
   end
 
