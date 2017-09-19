@@ -39,7 +39,7 @@ class UsersController < ApplicationController
   def index
     @users = User.all
     respond_to do |format|
-      format.dt { render json: @users, adapter: DataTables::Adapter }
+      format.dt { render dt: @users }
     end
   end
 
