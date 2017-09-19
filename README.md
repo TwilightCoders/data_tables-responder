@@ -1,3 +1,8 @@
+[![Version      ](https://img.shields.io/gem/v/data_tables-responder.svg?maxAge=2592000)](https://rubygems.org/gems/data_tables-responder)
+[![Build Status ](https://travis-ci.org/TwilightCoders/data_tables-responder.svg)](https://travis-ci.org/TwilightCoders/data_tables-responder)
+[![Code Climate ](https://codeclimate.com/github/TwilightCoders/data_tables-responder/badges/gpa.svg)](https://codeclimate.com/github/TwilightCoders/data_tables-responder)
+[![Test Coverage](https://codeclimate.com/github/TwilightCoders/data_tables-responder/badges/coverage.svg)](https://codeclimate.com/github/TwilightCoders/data_tables-responder/coverage)
+
 # DataTables::Responder
 
 DataTables Responder assists with responding, filtering, searching, paginating and formatting results from DataTable client requests.
