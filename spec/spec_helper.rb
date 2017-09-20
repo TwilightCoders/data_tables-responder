@@ -1,8 +1,10 @@
 ENV["RAILS_ENV"] = "test"
 
 require 'database_cleaner'
-
 require 'data_tables/responder'
+require "simplecov"
+
+SimpleCov.start
 
 Dir[DataTables.root.join('spec/support/**/*.rb')].each { |f| require f }
 
