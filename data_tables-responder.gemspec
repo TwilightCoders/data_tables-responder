@@ -28,8 +28,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib', 'spec']
 
-  rails_versions = ['>= 4', '< 6']
-  spec.required_ruby_version = '>= 2.0'
+  rails_versions = ['>= 4.1', '< 6']
+  spec.required_ruby_version = '>= 2.1'
 
   spec.add_runtime_dependency 'active_model_serializers', '~> 0'
   spec.add_runtime_dependency 'quick_count', ['>= 0.0.3', '< 0.1.0']
