@@ -10,6 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['dale@twilightcoders.net']
 
   spec.summary       = 'Respond to DataTable requests.'
+  spec.description   = "Allows rails to respond to DataTable requests"
   spec.homepage      = "https://github.com/TwilightCoders/data_tables-responder"
   spec.license       = 'MIT'
 
@@ -30,7 +31,7 @@ Gem::Specification.new do |spec|
   rails_versions = ['>= 4', '< 6']
   spec.required_ruby_version = '>= 2.0'
 
-  spec.add_runtime_dependency 'active_model_serializers', '~> 0.10.4'
+  spec.add_runtime_dependency 'active_model_serializers', '~> 0'
   spec.add_runtime_dependency 'quick_count', ['>= 0.0.3', '< 0.1.0']
   spec.add_runtime_dependency 'railties', rails_versions
 
