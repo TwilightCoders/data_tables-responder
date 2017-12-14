@@ -1,7 +1,8 @@
 [![Version      ](https://img.shields.io/gem/v/data_tables-responder.svg?maxAge=2592000)](https://rubygems.org/gems/data_tables-responder)
 [![Build Status ](https://travis-ci.org/TwilightCoders/data_tables-responder.svg)](https://travis-ci.org/TwilightCoders/data_tables-responder)
-[![Code Climate ](https://codeclimate.com/github/TwilightCoders/data_tables-responder/badges/gpa.svg)](https://codeclimate.com/github/TwilightCoders/data_tables-responder)
+[![Code Climate ](https://api.codeclimate.com/v1/badges/5032242cc2798697105a/maintainability)](https://codeclimate.com/github/TwilightCoders/data_tables-responder/maintainability)
 [![Test Coverage](https://codeclimate.com/github/TwilightCoders/data_tables-responder/badges/coverage.svg)](https://codeclimate.com/github/TwilightCoders/data_tables-responder/coverage)
+[![Dependencies ](https://gemnasium.com/badges/github.com/TwilightCoders/data_tables-responder.svg)](https://gemnasium.com/github.com/TwilightCoders/data_tables-responder)
 
 # DataTables::Responder
 
