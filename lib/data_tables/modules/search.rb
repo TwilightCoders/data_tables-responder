@@ -48,20 +48,21 @@ module DataTables
     protected
 
       def search_by_type(model, column, query, &block)
+        arel_column = model.arel_table[column]
         result = case model.columns_hash[column.to_s]&.type
         when :string
           # I'm pretty sure this is safe from SQL Injection
-          model.arel_table[column].matches("%#{query}%")
+          arel_column.matches("%#{query}%")
         when :integer
-          value = query&.to_i and model.arel_table[column].eq(value)
+          value = query&.to_i and arel_column.eq(value)
         when :datetime
           datetime = Time.parse(query)
           range = (datetime-1.second)..(datetime+1.second)
-          model.arel_table[column].between(range)
+          arel_column.between(range)
         when :uuid
           lower = query.gsub(/-/, '').ljust(32, '0')
           upper = query.gsub(/-/, '').ljust(32, 'f')
-          arel_for_range(model.arel_table[column], (lower..upper))
+          arel_for_range(arel_column, (lower..upper))
         end
 
         yield(result) if !result.nil? && block_given?
