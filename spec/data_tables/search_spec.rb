@@ -1,7 +1,5 @@
 require 'spec_helper'
 
-require 'pry'
-
 describe DataTables::Modules::Search do
 
   let!(:complex_params) do
