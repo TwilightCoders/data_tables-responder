@@ -85,9 +85,15 @@ module DataTables
 
       def arel_for_range(column, range)
         Arel::Nodes::Between.new(column, Arel::Nodes::And.new([
-          Arel::Nodes::Casted.new(range.first, column),
-          Arel::Nodes::Casted.new(range.last, column)
+          arel_casted_node(column, range.first),
+          arel_casted_node(column, range.last)
         ]))
+      end
+
+      def arel_casted_node(column, value)
+        Arel::Nodes::Casted.new(value, column)
+      rescue NameError
+        value
       end
 
     end
