@@ -45,7 +45,7 @@ module DataTables
         }, join_hash
       end
 
-      protected
+    protected
 
       def search_by_type(model, column, query, &block)
         result = case model.columns_hash[column.to_s]&.type
@@ -58,6 +58,10 @@ module DataTables
           datetime = Time.parse(query)
           range = (datetime-1.second)..(datetime+1.second)
           model.arel_table[column].between(range)
+        when :uuid
+          lower = query.gsub(/-/, '').ljust(32, '0')
+          upper = query.gsub(/-/, '').ljust(32, 'f')
+          arel_for_range(model.arel_table[column], (lower..upper))
         end
 
         yield(result) if !result.nil? && block_given?
@@ -74,6 +78,15 @@ module DataTables
           end
           collection
         end
+      end
+
+    private
+
+      def arel_for_range(column, range)
+        Arel::Nodes::Between.new(column, Arel::Nodes::And.new([
+          Arel::Nodes::Casted.new(range.first, column),
+          Arel::Nodes::Casted.new(range.last, column)
+        ]))
       end
 
     end

@@ -19,4 +19,6 @@ group :test do
 
   gem 'combustion'
 
+  gem 'pg'
+
 end
