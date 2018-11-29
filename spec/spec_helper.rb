@@ -1,5 +1,6 @@
 ENV['RAILS_ENV'] = 'test'
 
+require 'pry'
 require 'database_cleaner'
 require 'combustion'
 

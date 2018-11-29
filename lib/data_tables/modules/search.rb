@@ -45,6 +45,38 @@ module DataTables
         }, join_hash
       end
 
+      def self.date_format(*parts)
+        date_parts.slice(*parts).values.join
+      end
+
+      def self.date_parts
+        {
+          year: '%Y',
+          month: '-%m',
+          day: '-%d',
+          hour: ' %H',
+          minute: ':%M',
+          second: ':%S',
+          microsecond: '.%L',
+          zone: ':%z'
+        }
+      end
+
+      def self.find_date_precision(string)
+        precision = date = nil
+        date_parts.inject({}) do |fidelity, (label, template)|
+          begin
+            date = DateTime.strptime(string, fidelity.values.join+template)
+            precision = label
+            fidelity.merge!({label => template})
+          rescue ArgumentError => e
+            puts "Errored on #{label} (#{template})"
+            break fidelity unless fidelity.empty?
+          end
+        end
+        [precision, date]
+      end
+
     protected
 
       def search_by_type(model, column, query, &block)
@@ -56,9 +88,10 @@ module DataTables
         when :integer
           value = query&.to_i and arel_column.eq(value)
         when :datetime
-          datetime = Time.parse(query)
-          range = (datetime-1.second)..(datetime+1.second)
-          arel_column.between(range)
+          precision, date = DataTables::Modules::Search.find_date_precision(query)
+          # TODO: arel_column.date_part(:hour)
+          ActiveRecord::Base.connection.partial_date(precision, arel_column).eq(date)
+          # arel_column.date_trunc(precision).eq(date)
         when :uuid
           lower = query.gsub(/-/, '').ljust(32, '0')
           upper = query.gsub(/-/, '').ljust(32, 'f')

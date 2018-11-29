@@ -5,6 +5,11 @@ require 'data_tables/modules/pagination'
 require 'data_tables/modules/search'
 require 'data_tables/modules/order'
 
+require 'data_tables/arel/interval'
+
+require 'data_tables/database_statements/mysql'
+require 'data_tables/database_statements/postgresql'
+
 require 'data_tables/active_model_serializers/adapter'
 require 'data_tables/responder/railtie' if defined? ::Rails::Railtie
 
