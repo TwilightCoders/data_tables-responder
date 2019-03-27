@@ -208,7 +208,7 @@ describe DataTables::Responder do
       expect(response_sql).to include('"comments".* FROM "comments"')
       expect(response_sql).to include('INNER JOIN "posts" ON "posts"."id" = "comments"."post_id"')
       expect(response_sql).to include('JOIN "users" ON "users"."id" = "posts"."user_id"')
-      expect(response_sql).to include('WHERE ("users"."email" ILIKE \'%foo@bar.baz%\')')
+      expect(response_sql).to include('"users"."email" ILIKE \'%foo@bar.baz%\'')
       expect(response_sql).to include('ORDER BY "users"."email" ASC')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
@@ -244,7 +244,7 @@ describe DataTables::Responder do
       response_sql = response.to_sql
 
       expect(response.count).to eq(1)
-      expect(response_sql).to include('WHERE ("posts"."title" ILIKE \'%foo%\')')
+      expect(response_sql).to include('"posts"."title" ILIKE \'%foo%\'')
       expect(response_sql).to include('ORDER BY "posts"."title" ASC')
       expect(response_sql).to include('LIMIT 10 OFFSET 0')
     end
