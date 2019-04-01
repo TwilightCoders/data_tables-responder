@@ -12,7 +12,8 @@ ActiveRecord::Schema.define do
   create_table :posts, :force => true do |t|
     t.uuid :user_id
     t.string :title
-    t.integer :views # for testing integers
+    t.integer :views
+    t.float :engagement_rate
     t.timestamps
   end
 
